@@ -1,0 +1,15 @@
+# requirements.txt
+Flask==2.3.3
+Werkzeug==2.3.7
+python-dotenv==1.0.0
+supabase==1.0.3
+qdrant-client==1.4.0
+langchain==0.0.267
+langchain-community==0.0.10
+llama-cpp-python==0.1.77
+sentence-transformers==2.2.2
+PyPDF2==3.0.1
+python-docx==0.8.11
+pytesseract==0.3.10
+Pillow==10.0.0
+PyJWT==2.8.0
