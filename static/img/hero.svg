@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400">
+  <!-- Background -->
+  <rect width="800" height="400" fill="#f7f9fc" />
+  
+  <!-- AI Brain -->
+  <circle cx="400" cy="180" r="120" fill="#ebeefa" stroke="#3a36db" stroke-width="3" />
+  
+  <!-- Circuit Pattern -->
+  <path d="M320 180 L260 180 L260 120 L340 120 L340 160" stroke="#3a36db" stroke-width="2" fill="none" />
+  <path d="M480 180 L540 180 L540 120 L460 120 L460 160" stroke="#3a36db" stroke-width="2" fill="none" />
+  <path d="M400 300 L400 340 L340 340 L340 240" stroke="#3a36db" stroke-width="2" fill="none" />
+  <path d="M400 300 L400 340 L460 340 L460 240" stroke="#3a36db" stroke-width="2" fill="none" />
+  
+  <!-- Circuit Dots -->
+  <circle cx="260" cy="180" r="5" fill="#3a36db" />
+  <circle cx="260" cy="120" r="5" fill="#3a36db" />
+  <circle cx="340" cy="120" r="5" fill="#3a36db" />
+  <circle cx="340" cy="160" r="5" fill="#3a36db" />
+  <circle cx="540" cy="180" r="5" fill="#3a36db" />
+  <circle cx="540" cy="120" r="5" fill="#3a36db" />
+  <circle cx="460" cy="120" r="5" fill="#3a36db" />
+  <circle cx="460" cy="160" r="5" fill="#3a36db" />
+  <circle cx="400" cy="340" r="5" fill="#3a36db" />
+  <circle cx="340" cy="340" r="5" fill="#3a36db" />
+  <circle cx="340" cy="240" r="5" fill="#3a36db" />
+  <circle cx="460" cy="340" r="5" fill="#3a36db" />
+  <circle cx="460" cy="240" r="5" fill="#3a36db" />
+  
+  <!-- Brain Pulses -->
+  <circle cx="400" cy="180" r="20" fill="#3a36db" opacity="0.2">
+    <animate attributeName="r" values="20;40;20" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.2;0.1;0.2" dur="3s" repeatCount="indefinite" />
+  </circle>
+  <circle cx="400" cy="180" r="30" fill="#3a36db" opacity="0.1">
+    <animate attributeName="r" values="30;50;30" dur="3s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.1;0.05;0.1" dur="3s" repeatCount="indefinite" />
+  </circle>
+  
+  <!-- Document Icons -->
+  <rect x="330" y="160" width="40" height="50" fill="white" stroke="#3a36db" stroke-width="2" />
+  <line x1="340" y1="175" x2="360" y2="175" stroke="#3a36db" stroke-width="2" />
+  <line x1="340" y1="185" x2="360" y2="185" stroke="#3a36db" stroke-width="2" />
+  <line x1="340" y1="195" x2="350" y2="195" stroke="#3a36db" stroke-width="2" />
+  
+  <rect x="430" y="160" width="40" height="50" fill="white" stroke="#3a36db" stroke-width="2" />
+  <line x1="440" y1="175" x2="460" y2="175" stroke="#3a36db" stroke-width="2" />
+  <line x1="440" y1="185" x2="460" y2="185" stroke="#3a36db" stroke-width="2" />
+  <line x1="440" y1="195" x2="450" y2="195" stroke="#3a36db" stroke-width="2" />
+  
+  <!-- Title Text -->
+  <text x="400" y="80" font-family="Arial, sans-serif" font-size="28" text-anchor="middle" fill="#3a36db" font-weight="bold">
+    ระบบผู้ช่วยตรวจข้อสอบอัตนัย
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="400" y="370" font-family="Arial, sans-serif" font-size="16" text-anchor="middle" fill="#333333">
+    ใช้ AI ช่วยตรวจข้อสอบอย่างแม่นยำและรวดเร็ว
+  </text>
+</svg>
