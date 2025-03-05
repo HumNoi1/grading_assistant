@@ -32,23 +32,28 @@ class AuthService:
             dict: ข้อมูลผู้ใช้ที่ลงทะเบียน
         """
         try:
-            # ลงทะเบียนผู้ใช้ใน Supabase Auth
-            res = self.supabase.auth.sign_up({
+            # สร้างผู้ใช้ใน Supabase Auth ก่อน
+            auth_res = self.supabase.auth.sign_up({
                 "email": email,
                 "password": password
             })
             
-            user_id = res.user.id
+            user_id = auth_res.user.id
             
-            # สร้างข้อมูลผู้ใช้ในตาราง users
+            # หลังจากนั้นสร้างข้อมูลในตาราง users
             user_data = {
                 "id": user_id,
                 "name": name,
                 "email": email,
-                "role": "teacher"  # เริ่มต้นให้เป็นอาจารย์
+                "role": "teacher"
             }
             
-            self.supabase.table("users").insert(user_data).execute()
+            # ตรวจสอบว่ามีผู้ใช้อยู่แล้วหรือไม่
+            existing_user = self.supabase.table("users").select("*").eq("id", user_id).execute()
+            
+            if not existing_user.data:
+                # ถ้ายังไม่มี ให้เพิ่มข้อมูล
+                self.supabase.table("users").insert(user_data).execute()
             
             return {
                 "success": True,
@@ -60,6 +65,8 @@ class AuthService:
                 }
             }
         except Exception as e:
+            # เพิ่มการแสดงรายละเอียดข้อผิดพลาด
+            print(f"Error during signup: {str(e)}")
             return {"error": f"เกิดข้อผิดพลาดในการลงทะเบียน: {str(e)}"}
     
     def login(self, email, password):

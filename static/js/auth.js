@@ -1,19 +1,25 @@
-// static/js/auth.js
+// grading_assistant/static/js/auth.js
+// สคริปต์สำหรับหน้าเข้าสู่ระบบและลงทะเบียน
+
+// ตัวแปรเพื่อป้องกันการเรียกซ้ำ
+let authInitialized = false;
+
 document.addEventListener('DOMContentLoaded', function() {
-    // เพิ่มตรวจสอบว่าอยู่ที่หน้าใด
-    const currentPath = window.location.pathname;
-    const token = localStorage.getItem('token');
+    if (authInitialized) return; // ป้องกันการเรียกซ้ำ
+    authInitialized = true;
     
-    // ถ้าอยู่ในหน้า login/register แล้วมี token ให้ redirect ไปหน้า dashboard
-    if ((currentPath === '/login' || currentPath === '/register') && token) {
-        window.location.href = '/dashboard';
-        return; // ยุติการทำงานที่เหลือ
+    // ตรวจสอบว่ากำลังอยู่ที่หน้า login หรือ register หรือไม่
+    const currentPath = window.location.pathname;
+    if (currentPath !== '/login' && currentPath !== '/register') {
+        return; // ถ้าไม่ใช่หน้าที่เกี่ยวข้อง ให้ออกจากฟังก์ชัน
     }
     
-    // ถ้าอยู่ในหน้า dashboard แล้วไม่มี token ให้ redirect ไปหน้า login
-    if (currentPath === '/dashboard' && !token) {
-        window.location.href = '/login';
-        return; // ยุติการทำงานที่เหลือ
+    // ตรวจสอบว่าผู้ใช้เข้าสู่ระบบอยู่แล้วหรือไม่
+    const token = localStorage.getItem('token');
+    if (token) {
+        // ถ้าผู้ใช้เข้าสู่ระบบอยู่แล้ว ให้เปลี่ยนเส้นทางไปยังหน้าแผงควบคุม
+        window.location.href = '/dashboard';
+        return;
     }
     
     // เพิ่ม event listener สำหรับฟอร์มเข้าสู่ระบบ
@@ -21,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (loginForm) {
         loginForm.addEventListener('submit', function(event) {
             event.preventDefault();
+            
+            // ซ่อนข้อความข้อผิดพลาด
+            hideError('login-error');
             
             // รวบรวมข้อมูลจากฟอร์ม
             const data = {
@@ -40,9 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(result => {
                 if (result.error) {
                     // แสดงข้อความข้อผิดพลาด
-                    const errorEl = document.getElementById('login-error');
-                    errorEl.textContent = result.error;
-                    errorEl.classList.remove('d-none');
+                    showError('login-error', result.error);
                 } else if (result.success && result.token) {
                     // บันทึก token และข้อมูลผู้ใช้ใน localStorage
                     localStorage.setItem('token', result.token);
@@ -54,9 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('เกิดข้อผิดพลาดในการเข้าสู่ระบบ:', error);
-                const errorEl = document.getElementById('login-error');
-                errorEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์';
-                errorEl.classList.remove('d-none');
+                showError('login-error', 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
             });
         });
     }
@@ -67,16 +72,15 @@ document.addEventListener('DOMContentLoaded', function() {
         registerForm.addEventListener('submit', function(event) {
             event.preventDefault();
             
+            // ซ่อนข้อความข้อผิดพลาด
+            hideError('register-error');
+            
             // ตรวจสอบว่ารหัสผ่านและยืนยันรหัสผ่านตรงกันหรือไม่
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm-password').value;
             
-            const errorEl = document.getElementById('register-error');
-            errorEl.classList.add('d-none');
-            
             if (password !== confirmPassword) {
-                errorEl.textContent = 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน';
-                errorEl.classList.remove('d-none');
+                showError('register-error', 'รหัสผ่านและยืนยันรหัสผ่านไม่ตรงกัน');
                 return;
             }
             
@@ -99,8 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(result => {
                 if (result.error) {
                     // แสดงข้อความข้อผิดพลาด
-                    errorEl.textContent = result.error;
-                    errorEl.classList.remove('d-none');
+                    showError('register-error', result.error);
                 } else if (result.success) {
                     // เปลี่ยนเส้นทางไปยังหน้าเข้าสู่ระบบพร้อมข้อความสำเร็จ
                     window.location.href = '/login?registered=true';
@@ -108,9 +111,31 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('เกิดข้อผิดพลาดในการลงทะเบียน:', error);
-                errorEl.textContent = 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์';
-                errorEl.classList.remove('d-none');
+                showError('register-error', 'เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์');
             });
         });
+    }
+    
+    // ตรวจสอบพารามิเตอร์ URL
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // แสดงข้อความสำเร็จหลังจากลงทะเบียน
+    if (urlParams.get('registered') === 'true') {
+        const loginError = document.getElementById('login-error');
+        if (loginError) {
+            loginError.textContent = 'ลงทะเบียนสำเร็จ! โปรดเข้าสู่ระบบด้วยบัญชีของคุณ';
+            loginError.classList.remove('alert-danger');
+            loginError.classList.add('alert-success');
+            loginError.classList.remove('d-none');
+        }
+    }
+    
+    // แสดงข้อความหมดเวลาเซสชัน
+    if (urlParams.get('error') === 'session_expired') {
+        const loginError = document.getElementById('login-error');
+        if (loginError) {
+            loginError.textContent = 'เซสชันหมดอายุ โปรดเข้าสู่ระบบอีกครั้ง';
+            loginError.classList.remove('d-none');
+        }
     }
 });
