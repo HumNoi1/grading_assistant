@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}เข้าสู่ระบบ - ระบบผู้ช่วยตรวจข้อสอบอัตนัย{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">เข้าสู่ระบบ</h4>
+            </div>
+            <div class="card-body">
+                <form id="login-form">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">อีเมล</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">รหัสผ่าน</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">เข้าสู่ระบบ</button>
+                    </div>
+                </form>
+                <div class="alert alert-danger mt-3 d-none" id="login-error"></div>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">ยังไม่มีบัญชี? <a href="/register">ลงทะเบียนที่นี่</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

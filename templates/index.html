@@ -1,0 +1,49 @@
+# File: templates/index.html
+{% extends 'base.html' %}
+
+{% block title %}หน้าหลัก - ระบบผู้ช่วยตรวจข้อสอบอัตนัย{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2 text-center">
+        <h1 class="mb-4">ระบบผู้ช่วยตรวจข้อสอบอัตนัยอัตโนมัติ</h1>
+        <p class="lead">ใช้เทคโนโลยี AI ช่วยตรวจข้อสอบอัตนัยได้อย่างรวดเร็วและแม่นยำ</p>
+        
+        <div class="my-5">
+            <img src="{{ url_for('static', filename='img/hero.svg') }}" alt="ภาพประกอบหน้าหลัก" class="img-fluid">
+        </div>
+        
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">รวดเร็ว</h5>
+                        <p class="card-text">ตรวจข้อสอบอัตนัยได้รวดเร็วกว่าการตรวจด้วยมือ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">แม่นยำ</h5>
+                        <p class="card-text">ใช้ AI ช่วยตรวจเทียบกับเฉลยของอาจารย์ได้อย่างแม่นยำ</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">มีเหตุผล</h5>
+                        <p class="card-text">แสดงเหตุผลประกอบการให้คะแนนอย่างชัดเจน</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-5">
+            <a href="/register" class="btn btn-primary btn-lg me-3">ลงทะเบียนใช้งาน</a>
+            <a href="/login" class="btn btn-outline-primary btn-lg">เข้าสู่ระบบ</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

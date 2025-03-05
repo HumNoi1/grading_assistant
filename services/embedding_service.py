@@ -1,7 +1,8 @@
-# grading_assistant/services/embedding_service.py
+# services/embedding_service.py
 import os
 import uuid
-from langchain.embeddings import HuggingFaceEmbeddings
+import requests
+import json
 from models.vector_db import VectorDB
 from dotenv import load_dotenv
 
@@ -9,19 +10,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ตั้งค่าพื้นฐาน
-EMBEDDING_MODEL_NAME = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+LMSTUDIO_URL = os.getenv("LMSTUDIO_URL", "http://127.0.0.1:1234")
 
 class EmbeddingService:
     """
     คลาสสำหรับการสร้าง Vector Embeddings และจัดการกับคลังข้อมูล Vector
     """
     def __init__(self):
-        self.embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL_NAME)
         self.vector_db = VectorDB()
     
     def create_embedding(self, text):
         """
-        สร้าง embedding จากข้อความ
+        สร้าง embedding จากข้อความ โดยใช้ LMStudio
         
         Args:
             text (str): ข้อความที่ต้องการสร้าง embedding
@@ -29,7 +29,24 @@ class EmbeddingService:
         Returns:
             list: vector embedding
         """
-        return self.embeddings.embed_query(text)
+        try:
+            # ใช้ API ของ LMStudio เพื่อสร้าง embedding
+            response = requests.post(
+                f"{LMSTUDIO_URL}/v1/embeddings",
+                headers={"Content-Type": "application/json"},
+                json={"input": text}
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                return data['data'][0]['embedding']
+            else:
+                # กรณีไม่สามารถเชื่อมต่อได้ หรือมีข้อผิดพลาด ให้ส่งค่า embedding ว่าง
+                print(f"Error creating embedding: {response.text}")
+                return [0] * 1536  # ใช้ค่าว่างขนาด 1536 (ขนาดทั่วไปของ embedding)
+        except Exception as e:
+            print(f"Error connecting to LMStudio: {str(e)}")
+            return [0] * 1536
     
     def store_solution_embedding(self, solution_id, text, metadata=None):
         """
@@ -104,19 +121,11 @@ class EmbeddingService:
         Returns:
             list: รายการ vector IDs ที่บันทึก
         """
-        from langchain.text_splitter import RecursiveCharacterTextSplitter
-        
         if metadata is None:
             metadata = {}
             
-        # สร้าง text splitter
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size,
-            chunk_overlap=overlap
-        )
-        
         # แบ่งข้อความ
-        chunks = text_splitter.split_text(text)
+        chunks = self._split_text(text, chunk_size, overlap)
         
         # สร้างและบันทึก embeddings
         vector_ids = []
@@ -138,3 +147,45 @@ class EmbeddingService:
             vector_ids.append(vector_id)
             
         return vector_ids
+        
+    def _split_text(self, text, chunk_size=1000, overlap=200):
+        """
+        แบ่งข้อความเป็นชิ้นเล็กๆ
+        
+        Args:
+            text (str): ข้อความที่ต้องการแบ่ง
+            chunk_size (int): ขนาดของแต่ละชิ้น
+            overlap (int): จำนวนตัวอักษรที่ซ้อนทับกัน
+            
+        Returns:
+            list: รายการชิ้นข้อความ
+        """
+        chunks = []
+        
+        if not text:
+            return chunks
+            
+        i = 0
+        text_length = len(text)
+        
+        while i < text_length:
+            # กำหนดจุดสิ้นสุดของชิ้นปัจจุบัน
+            end = min(i + chunk_size, text_length)
+            
+            # ตรวจสอบว่าควรขยายชิ้นเพื่อไม่ให้ตัดคำกลาง
+            if end < text_length:
+                # หาจุดสิ้นสุดที่เป็นช่องว่างหรือเครื่องหมายวรรคตอน
+                while end > i and not text[end].isspace() and not text[end] in ",.!?;:":
+                    end -= 1
+                
+                # ถ้าไม่พบช่องว่างหรือเครื่องหมายวรรคตอน ใช้ขนาดเต็ม
+                if end == i:
+                    end = min(i + chunk_size, text_length)
+            
+            # เพิ่มชิ้นข้อความลงในรายการ
+            chunks.append(text[i:end])
+            
+            # เลื่อนไปยังจุดเริ่มต้นของชิ้นถัดไป โดยคำนึงถึงการซ้อนทับ
+            i = end - overlap if end - overlap > i else end
+            
+        return chunks

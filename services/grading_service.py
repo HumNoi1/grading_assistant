@@ -1,10 +1,6 @@
 # grading_assistant/services/grading_service.py
 import os
 import json
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import RetrievalQA
-from langchain.retrievers import TFIDFRetriever
-from langchain.docstore.document import Document
 from services.llm_service import LLMService
 from services.embedding_service import EmbeddingService
 from models.database import SolutionModel, SubmissionModel, GradeModel, AssignmentModel
@@ -24,10 +20,6 @@ class GradingService:
         self.submission_model = SubmissionModel()
         self.grade_model = GradeModel()
         self.assignment_model = AssignmentModel()
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200
-        )
     
     def extract_grading_results(self, llm_response):
         """
@@ -169,87 +161,51 @@ class GradingService:
                 if solution_data:
                     relevant_solutions.append(solution_data[0])
         
-        # ถ้าไม่มีเฉลยที่เกี่ยวข้อง ให้ใช้การตรวจแบบปกติ
-        if not relevant_solutions:
-            return self.grade_submission_with_llm(submission_id)
-        
-        # สร้าง documents สำหรับ RAG
-        documents = []
+        # รวมเนื้อหาเฉลยทั้งหมด
+        combined_solution_text = ""
         for solution in relevant_solutions:
             if solution['content_text']:
-                documents.append(
-                    Document(
-                        page_content=solution['content_text'],
-                        metadata={"source": f"solution_{solution['id']}"}
-                    )
-                )
+                combined_solution_text += solution['content_text'] + "\n\n"
         
-        # สร้าง retriever
-        retriever = TFIDFRetriever.from_documents(documents)
+        # ถ้าไม่มีเฉลยที่เกี่ยวข้อง ให้ใช้การตรวจแบบปกติ
+        if not combined_solution_text:
+            return self.grade_submission_with_llm(submission_id)
         
-        # สร้าง prompt สำหรับการตรวจโดยใช้ RAG
-        grading_template = """
-        คุณเป็นผู้ช่วยตรวจข้อสอบอัตนัย เปรียบเทียบคำตอบของนักเรียนกับเฉลยและให้คะแนน
-        
-        ข้อมูลเฉลยและแนวทางการให้คะแนน:
-        {context}
-        
-        คำตอบของนักเรียน:
-        {query}
-        
-        คะแนนเต็ม: {total_score}
-        
-        โปรดวิเคราะห์คำตอบของนักเรียนเทียบกับเฉลย แล้วให้คะแนนตามเกณฑ์ต่อไปนี้:
-        1. ความถูกต้องของแนวคิดหลัก (60%)
-        2. ความสมบูรณ์ของคำตอบ (30%)
-        3. การใช้ศัพท์เทคนิคที่ถูกต้อง (10%)
-        
-        ผลลัพธ์ที่ต้องการ:
-        1. คะแนนที่ได้ (เป็นตัวเลข): 
-        2. เหตุผลในการให้คะแนน:
-        3. ข้อเสนอแนะสำหรับนักเรียน:
-        """
-        
-        # สร้าง RetrievalQA chain
-        qa_chain = RetrievalQA.from_chain_type(
-            llm=self.llm_service.llm,
-            chain_type="stuff",
-            retriever=retriever,
-            chain_type_kwargs={
-                "prompt": grading_template.format(
-                    context="{context}",
-                    query=submission_text,
-                    total_score=assignment_data['total_score']
-                )
+        try:
+            # เรียกใช้ LLM service กับเฉลยที่รวมแล้ว
+            llm_response = self.llm_service.grade_submission(
+                solution_text=combined_solution_text,
+                submission_text=submission_text,
+                total_score=assignment_data['total_score']
+            )
+            
+            # แยกข้อมูลคะแนนและข้อเสนอแนะ
+            grading_results = self.extract_grading_results(llm_response)
+            
+            # บันทึกผลการตรวจลงฐานข้อมูล
+            grade_data = {
+                "score": grading_results['score'],
+                "feedback": grading_results['reasons'] + "\n\n" + grading_results['feedback'],
+                "approved": False,  # ต้องได้รับการอนุมัติจากอาจารย์
+                "user_id": submission_data['user_id'],
+                "submission_id": submission_id
             }
-        )
-        
-        # ทำการตรวจโดยใช้ RAG
-        result = qa_chain(submission_text)
-        llm_response = result['result']
-        
-        # แยกข้อมูลคะแนนและข้อเสนอแนะ
-        grading_results = self.extract_grading_results(llm_response)
-        
-        # บันทึกผลการตรวจลงฐานข้อมูล
-        grade_data = {
-            "score": grading_results['score'],
-            "feedback": grading_results['reasons'] + "\n\n" + grading_results['feedback'],
-            "approved": False,  # ต้องได้รับการอนุมัติจากอาจารย์
-            "user_id": submission_data['user_id'],
-            "submission_id": submission_id
-        }
-        
-        grade_result = self.grade_model.create(grade_data)
-        
-        # อัปเดตสถานะของคำตอบ
-        self.submission_model.update(submission_id, {"status": "graded"})
-        
-        return {
-            "grade_id": grade_result.data[0]['id'],
-            "score": grading_results['score'],
-            "feedback": grading_results['reasons'] + "\n\n" + grading_results['feedback'],
-            "total_score": assignment_data['total_score'],
-            "raw_llm_response": llm_response,
-            "method": "rag"
-        }
+            
+            grade_result = self.grade_model.create(grade_data)
+            
+            # อัปเดตสถานะของคำตอบ
+            self.submission_model.update(submission_id, {"status": "graded"})
+            
+            return {
+                "grade_id": grade_result.data[0]['id'],
+                "score": grading_results['score'],
+                "feedback": grading_results['reasons'] + "\n\n" + grading_results['feedback'],
+                "total_score": assignment_data['total_score'],
+                "raw_llm_response": llm_response,
+                "method": "rag",
+                "relevant_solutions_count": len(relevant_solutions)
+            }
+        except Exception as e:
+            print(f"Exception in RAG grading: {str(e)}")
+            # กรณีที่มีข้อผิดพลาด ให้ใช้การตรวจแบบปกติ
+            return self.grade_submission_with_llm(submission_id)

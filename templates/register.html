@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}ลงทะเบียน - ระบบผู้ช่วยตรวจข้อสอบอัตนัย{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">ลงทะเบียน</h4>
+            </div>
+            <div class="card-body">
+                <form id="register-form">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">ชื่อ-นามสกุล</label>
+                        <input type="text" class="form-control" id="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">อีเมล</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">รหัสผ่าน</label>
+                        <input type="password" class="form-control" id="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm-password" class="form-label">ยืนยันรหัสผ่าน</label>
+                        <input type="password" class="form-control" id="confirm-password" required>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">ลงทะเบียน</button>
+                    </div>
+                </form>
+                <div class="alert alert-danger mt-3 d-none" id="register-error"></div>
+            </div>
+            <div class="card-footer text-center">
+                <p class="mb-0">มีบัญชีอยู่แล้ว? <a href="/login">เข้าสู่ระบบที่นี่</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

@@ -158,17 +158,4 @@
     }
   }
   
-  /* Thai Font integration */
-  @font-face {
-    font-family: 'Sarabun';
-    src: url('/static/fonts/Sarabun-Regular.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-  }
-  
-  @font-face {
-    font-family: 'Sarabun';
-    src: url('/static/fonts/Sarabun-Bold.ttf') format('truetype');
-    font-weight: bold;
-    font-style: normal;
-  }
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
